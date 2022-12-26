@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import csv
+import time
+from pynput import keyboard, mouse
+from sklearn import preprocessing
 import copy
 import argparse
 import itertools
 from collections import Counter
 from collections import deque
-
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -37,6 +39,37 @@ def get_args():
 
     return args
 
+def duongphamminhdung(hand_landmarks, keypoint_classifier, pre_processed_landmark_list, pre_processed_point_history_list, history_length, point_history_classifier):
+    hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+    kb = keyboard.Controller()
+    mice = mouse.Controller()
+    Button = mouse.Button
+    Key = keyboard.Key
+    finger_gesture_id = 0
+    point_history_len = len(pre_processed_point_history_list)
+    if point_history_len == (history_length * 2):
+        finger_gesture_id = point_history_classifier(
+            pre_processed_point_history_list)
+    # if hand_sign_id == 1:
+        
+    #     return
+    # elif hand_sign_id == 0:
+    #     kb.press(Key.up)
+    #     return
+    # elif hand_sign_id == 2:
+    #     kb.press(Key.down)
+    #     return
+    speed = 70
+    if hand_sign_id == 2:
+        x, y = hand_landmarks.landmark[5].x, hand_landmarks.landmark[5].y
+        Xm = x*1535 + speed
+        Ym = y*863 + speed
+        mice.position = (Xm, Ym)
+        if hand_landmarks.landmark[12].y > hand_landmarks.landmark[9].y:
+            mice.scroll(0, -0.4)
+    if hand_sign_id == 1:
+        mice.click(Button.left, 1)
+        time.sleep(0.3)
 
 def main():
     # 引数解析 #################################################################
@@ -136,11 +169,19 @@ def main():
                 pre_processed_point_history_list = pre_process_point_history(
                     debug_image, point_history)
                 # 学習データ保存
+#here000000000000000000000000000000000000000###################################################################################
+
+
+                duongphamminhdung(hand_landmarks, keypoint_classifier, pre_processed_landmark_list, pre_processed_point_history_list, history_length, point_history_classifier)
+                    
+
+#here000000000000000000000000000000000000000#################################################################################
+
                 logging_csv(number, mode, pre_processed_landmark_list,
                             pre_processed_point_history_list)
-
                 # ハンドサイン分類
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+
                 if hand_sign_id == 2:  # 指差しサイン
                     point_history.append(landmark_list[8])  # 人差指座標
                 else:
